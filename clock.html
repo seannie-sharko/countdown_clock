@@ -5,16 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Countdown Clock</title>
     <style>
-        #countdown {
+        /* Center the table on the screen */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
             font-family: Arial, sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+            padding: 20px;
+            border: 2px solid #333;
+            background-color: #f9f9f9;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
             font-size: 30px;
             font-weight: bold;
+            color: #333;
+        }
+
+        #countdown {
+            font-size: 24px;
             color: #333;
         }
     </style>
 </head>
 <body>
-    <div id="countdown"></div>
+    <table>
+        <tr>
+            <td>TIME LEFT FOR TRUMP:</td>
+        </tr>
+        <tr>
+            <td id="countdown"></td>
+        </tr>
+    </table>
 
     <script>
         // Set the target date (Jan 20, 2029)
@@ -35,13 +65,13 @@
             const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
 
             // Display the result
-            document.getElementById("countdown").innerHTML = 
+            document.getElementById("countdown").innerHTML =
                 days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
 
             // If the countdown is over, display a message
             if (timeDifference < 0) {
                 clearInterval(countdownInterval);
-                document.getElementById("countdown").innerHTML = "THE FAT MAN IS GONE!";
+                document.getElementById("countdown").innerHTML = "HOORAY!";
             }
         }, 1000);
     </script>
