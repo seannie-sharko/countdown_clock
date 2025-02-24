@@ -14,6 +14,17 @@
 
       const headers = {
         'Content-Type': 'application/json',
+        'Vary': 'Origin, Accept-Encoding',
+        'APC-Route-id': '_01_05v',
+        'Access-Control-Allow-Headers': 'origin,x-requested-with,access-control-request-headers,content-type,access-control-request-method,accept',
+        'Access-Control-Allow-Origin': '*',
+        'Route-Id': '_t8_06v;',
+        'Transfer-Encoding': 'chunked',
+        'Pool-Info': 'AP01',
+        'X-Frame-Options': 'ALLOW-FROM https://www.bls.gov',
+        'Content-Security-Policy': 'frame-ancestors https://*.bls.gov',
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; Preload',
       };
 
       const requestBody = {
