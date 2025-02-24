@@ -1,79 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Countdown Clock</title>
-    <style>
-        /* Center the table on the screen */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPI Data Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Add Chart.js library -->
+
+  <script>
+    // Function to fetch data from the BLS API and format the output for charting
+    async function fetchBLSData() {
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      const apiUrl = 'https://api.bls.gov/publicAPI/v2/timeseries/data/';
+
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+
+      const requestBody = {
+        seriesid: ['APU0000708111'],
+        startyear: '2024',
+        endyear: '2025',
+      };
+
+      try {
+        // Make the POST request to the BLS API through the proxy
+        const response = await fetch(proxyUrl + apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
         }
 
-        table {
-            border-collapse: collapse;
-            padding: 20px;
-            border: 2px solid #333;
-            background-color: #f9f9f9;
-        }
+        const jsonData = await response.json();
 
-        td {
-            padding: 10px;
-            text-align: center;
-            font-size: 30px;
-            font-weight: bold;
-            color: #333;
-        }
+        // Prepare data for the chart
+        let labels = [];  // Array for x-axis (year + period)
+        let dataValues = []; // Array for y-axis (value)
 
-        #countdown {
-            font-size: 24px;
-            color: #333;
-        }
-    </style>
+        jsonData.Results.series.forEach(series => {
+          series.data.forEach(item => {
+            const year = item.year;
+            const period = item.period;
+            const value = item.value;
+
+            // Only include periods M01 to M12 (January to December)
+            if ('M01' <= period && period <= 'M12') {
+              const label = `${year}-${period}`; // Combine year and period for the label
+              labels.push(label);
+              dataValues.push(value);  // Store corresponding value
+            }
+          });
+        });
+
+        // Reverse the order of the labels and data (so that the chart starts from the latest)
+        labels.reverse();
+        dataValues.reverse();
+
+        // Convert the CPI values to USD format (e.g., "$100.50")
+        const formattedValues = dataValues.map(value => {
+          return '$' + parseFloat(value).toFixed(2);  // Format the value as USD (2 decimal points)
+        });
+
+        // Create the chart
+        const ctx = document.getElementById('cpiChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,  // X-axis labels (e.g., "2024-M01")
+            datasets: [{
+              label: 'CPI Value (USD)',  // Dataset label
+              data: dataValues,   // Y-axis data (CPI values)
+              borderColor: 'rgba(75, 192, 192, 1)',  // Line color
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',  // Area under the line (translucent)
+              fill: true,  // Fill the area under the line
+              tension: 0.1  // Smoothness of the line
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Time (Year-Month)'
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'CPI Value (USD)'
+                },
+                beginAtZero: false,  // Start y-axis at 0, or adjust according to your preference
+                ticks: {
+                  callback: function(value) {
+                    return '$' + value.toFixed(2);  // Format y-axis labels as USD
+                  }
+                }
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching BLS data:', error);
+      }
+    }
+
+    // Call the function to fetch and display the data when the page loads
+    window.onload = fetchBLSData;
+
+  </script>
 </head>
 <body>
-    <table>
-        <tr>
-            <td>TIME LEFT FOR THE FAT MAN: </td>
-        </tr>
-        <tr>
-            <td id="countdown"></td>
-        </tr>
-    </table>
+  <h1>Consumer Price of Eggs (last 12 months)</h1>
+  <canvas id="cpiChart" width="10" height="10"></canvas> <!-- Canvas for the chart -->
 
-    <script>
-        // Set the target date
-        const targetDate = new Date("Jan 20, 2029 00:00:00").getTime();
+  <style>
+      /* Globals */
+      table {
+          border-collapse: collapse;
+          padding: 20px;
+          border: 2px solid #333;
+          background-color: #f9f9f9;
+      }
 
-        // Update the countdown every 1 second
-        const countdownInterval = setInterval(function() {
-            // Get current date and time
-            const now = new Date().getTime();
+      td {
+          padding: 10px;
+          text-align: center;
+          font-size: 30px;
+          font-weight: bold;
+          color: #333;
+      }
 
-            // Calculate the time difference between now and the target date
-            const timeDifference = targetDate - now;
+      #countdown {
+          font-size: 24px;
+          color: #333;
+      }
+  </style>
 
-            // Calculate days, hours, minutes, and seconds
-            const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
 
-            // Display the result
-            document.getElementById("countdown").innerHTML =
-                days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+  <table>
+      <tr>
+          <td>TIME LEFT FOR TRUMP:</td>
+      </tr>
+      <tr>
+          <td id="countdown"></td>
+      </tr>
+  </table>
 
-            // If the countdown is over, display a message
-            if (timeDifference < 0) {
-                clearInterval(countdownInterval);
-                document.getElementById("countdown").innerHTML = "HOORAY!";
-            }
-        }, 1000);
-    </script>
+
+  <script>
+  const targetDate = new Date("Jan 20, 2029 00:00:00").getTime();
+
+  // Update the countdown every 1 second
+  const countdownInterval = setInterval(function() {
+      // Get current date and time
+      const now = new Date().getTime();
+
+      // Calculate the time difference between now and the target date
+      const timeDifference = targetDate - now;
+
+      // Calculate days, hours, minutes, and seconds
+      const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+      // Display the result
+      document.getElementById("countdown").innerHTML =
+          days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+
+      // If the countdown is over, display a message
+      if (timeDifference < 0) {
+          clearInterval(countdownInterval);
+          document.getElementById("countdown").innerHTML = "HOORAY!";
+      }
+  }, 1000);
+
+</script>
+
 </body>
 </html>
